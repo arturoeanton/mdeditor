@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Pro Nexus v9.9.1 - Integrated Knowledge Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root { --accent: #4F46E5; }
+        body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #1A1A1A; overflow: hidden; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-tab { background-color: #EEF2FF; color: var(--accent); font-weight: 700; }
+        
+        .view-section { display: none; height: 100%; flex-direction: column; overflow: hidden; }
+        .view-section.active { display: flex; }
+        
+        /* Markdown Styling */
+        .prose h1 { font-weight: 900; font-size: 2.25rem; margin-bottom: 1.5rem; color: #111827; }
+        .prose h2 { font-weight: 800; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; color: #1F2937; border-bottom: 2px solid #F3F4F6; padding-bottom: 0.5rem; }
+        .prose p { margin-bottom: 1.25rem; line-height: 1.8; color: #4B5563; }
+        .prose code { background: #F3F4F6; padding: 0.2rem 0.4rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; color: #6366F1; word-break: break-all; }
+
+        /* Interactive JS */
+        .js-exec-btn { background: #4F46E5; color: white; font-size: 10px; font-weight: 900; padding: 8px 16px; border-radius: 8px; margin-bottom: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: none; }
+        .js-exec-btn:hover { background: #4338CA; }
+        .js-output { background: #0F172A; color: #E2E8F0; padding: 20px; border-radius: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-top: 12px; border-left: 5px solid #10B981; overflow-x: auto; max-width: 100%; }
+
+        /* Drag & Drop */
+        .live-block-wrapper { position: relative; margin-bottom: 1rem; transition: transform 0.2s, opacity 0.2s; }
+        .live-block-wrapper.dragging { opacity: 0.4; border: 2px dashed var(--accent); border-radius: 12px; }
+        .live-block { position: relative; padding: 16px; border-radius: 12px; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; background: white; }
+        .live-block:hover { border-color: #E5E7EB; box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05); }
+        
+        .block-sidebar { position: absolute; left: -35px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; opacity: 0; transition: all 0.2s; }
+        .live-block-wrapper:hover .block-sidebar { opacity: 1; left: -25px; }
+        .drag-handle { cursor: grab; color: #CBD5E1; padding: 8px; border-radius: 4px; }
+        .drag-handle:hover { color: var(--accent); background: #F1F5F9; }
+
+        .add-block-btn { position: absolute; left: 50%; transform: translateX(-50%); opacity: 0; transition: all 0.2s; z-index: 10; background: var(--accent); color: white; border-radius: 99px; padding: 4px 12px; font-size: 9px; font-weight: 900; display: flex; items-center; gap: 4px; border: none; cursor: pointer; }
+        .live-block-wrapper:hover .add-block-btn { opacity: 1; }
+        .add-above { top: -12px; }
+        .add-below { bottom: -12px; }
+
+        .live-editor-textarea { width: 100%; font-family: 'JetBrains Mono', monospace; background: #FFF; border: 2px solid var(--accent); border-radius: 12px; padding: 20px; outline: none; }
+
+        /* Tree View */
+        .tree-folder { cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; transition: background 0.2s; color: #475569; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tree-folder:hover { background: #F1F5F9; color: #1E293B; }
+        .tree-folder.selected { background: #EEF2FF; color: var(--accent); }
+        .tree-note { cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 28px; border-radius: 10px; transition: all 0.2s; color: #64748B; font-size: 13px; font-weight: 500; border-left: 2px solid transparent; margin-bottom: 2px; }
+        .tree-note:hover { background: #F8FAFC; color: #1E293B; }
+        .tree-note.active { background: #EEF2FF; color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
+
+        /* Status & UI Components */
+        .status-badge { font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 99px; text-transform: uppercase; cursor: pointer; border: none; }
+        .status-todo { background: #F3F4F6; color: #6B7280; }
+        .status-doing { background: #DBEAFE; color: #2563EB; }
+        .status-blocked { background: #FEE2E2; color: #DC2626; }
+        .status-done { background: #D1FAE5; color: #059669; }
+        .hashtag-pill { font-size: 10px; color: #6366F1; background: #EEF2FF; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+
+        @media (max-width: 768px) {
+            .block-sidebar { display: none; }
+            .add-block-btn { opacity: 1; position: relative; transform: none; left: auto; display: block; width: 100%; text-align: center; margin: 4px 0; }
+            .view-section { padding: 1rem !important; }
+        }
+
+        #nexus-container { width: 100%; height: 100%; background: #F9FAFB; cursor: grab; position: relative; }
+        #nexus-canvas { width: 100%; height: 100%; display: block; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- MOBILE OVERLAY -->
+    <div id="mobile-overlay" onclick="toggleSidebar(false)" class="hidden fixed inset-0 z-40 md:hidden bg-black/20 backdrop-blur-sm"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="main-sidebar" class="fixed inset-y-0 left-0 w-[300px] bg-[#F8FAFC] border-r border-slate-200 flex flex-col shadow-2xl md:shadow-none z-50 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
+        <div class="p-6 md:p-8 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <span class="font-black text-2xl tracking-tighter text-slate-800">ZENITH</span>
+            </div>
+            <button onclick="toggleSidebar(false)" class="md:hidden p-2 text-slate-400 border-none bg-transparent cursor-pointer"><i data-lucide="x"></i></button>
+        </div>
+
+        <nav class="px-4 space-y-1 overflow-y-auto flex-1 no-scrollbar">
+            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 px-3">Ecosistema</div>
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-200 transition-all text-left border-none bg-transparent cursor-pointer">
+                <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Dashboard</span>
+            </button>
+            <button onclick="switchView('graph')" id="nav-graph" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-200 transition-all text-left border-none bg-transparent cursor-pointer">
+                <i data-lucide="network" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Grafo Nexus</span>
+            </button>
+            
+            <div class="mt-8 flex items-center justify-between px-3 mb-3">
+                <div class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest">Navegador</div>
+                <button onclick="toggleFolderForm()" class="text-indigo-400 hover:text-indigo-600 border-none bg-transparent cursor-pointer" title="Nueva Carpeta"><i data-lucide="folder-plus" class="w-4 h-4"></i></button>
+            </div>
+
+            <div id="folder-inline-form" class="hidden px-3 mb-4">
+                <div class="flex bg-white rounded-lg border border-indigo-200 p-1">
+                    <input type="text" id="new-folder-name" placeholder="Nombre..." class="flex-1 bg-transparent px-2 py-1 text-xs outline-none border-none">
+                    <button onclick="confirmFolderCreation()" class="bg-indigo-600 text-white p-1 rounded-md border-none cursor-pointer"><i data-lucide="check" class="w-3 h-3"></i></button>
+                </div>
+            </div>
+
+            <div id="file-system-tree" class="space-y-1 mb-4">
+                <!-- Estructura Jerárquica Notas -->
+            </div>
+
+            <div class="mt-8 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 px-3">Organización</div>
+            <button onclick="switchView('tasks')" id="nav-tasks" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-200 transition-all text-left border-none bg-transparent cursor-pointer">
+                <i data-lucide="check-square" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Tareas</span>
+            </button>
+            <button onclick="switchView('teams')" id="nav-teams" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-200 transition-all text-left border-none bg-transparent cursor-pointer">
+                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Equipos</span>
+            </button>
+            <button onclick="switchView('contacts')" id="nav-contacts" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-200 transition-all text-left border-none bg-transparent cursor-pointer">
+                <i data-lucide="users-2" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Contactos</span>
+            </button>
+            <button onclick="switchView('trash')" id="nav-trash" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all text-left mt-4 border-none bg-transparent cursor-pointer">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <span class="text-sm font-bold">Papelera</span>
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-slate-200 bg-white">
+            <button onclick="createNewNote()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center space-x-2 hover:bg-indigo-700 transition-all shadow-lg border-none cursor-pointer">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>NUEVA NOTA</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-white relative overflow-hidden">
+        
+        <!-- MOBILE TOP NAV -->
+        <header class="md:hidden h-16 border-b border-slate-100 flex items-center justify-between px-6 bg-white z-30">
+            <button onclick="toggleSidebar(true)" class="text-slate-600 border-none bg-transparent cursor-pointer"><i data-lucide="menu"></i></button>
+            <span class="font-black text-xl tracking-tight text-indigo-600">ZENITH</span>
+            <button onclick="switchView('dashboard')" class="text-slate-600 border-none bg-transparent cursor-pointer"><i data-lucide="layout-grid"></i></button>
+        </header>
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar bg-[#FAFBFF]">
+            <h1 class="text-3xl md:text-5xl font-black mb-8 md:mb-12 tracking-tighter text-indigo-900">Workspace Nexus</h1>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 text-center">
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Documentos</p><h2 id="stat-notes" class="text-5xl font-black mt-2 text-indigo-600">0</h2></div>
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Tareas Done</p><h2 id="stat-tasks-done" class="text-5xl font-black mt-2 text-emerald-500">0</h2></div>
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Carpetas</p><h2 id="stat-folders" class="text-5xl font-black mt-2 text-amber-500">0</h2></div>
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Trash</p><h2 id="stat-trash" class="text-5xl font-black mt-2 text-red-400">0</h2></div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><h3 class="font-black text-2xl mb-8 text-slate-800">Actividad Reciente</h3><div id="dashboard-recent" class="space-y-4"></div></div>
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><h3 class="font-black text-2xl mb-8 text-slate-800">Red de Hashtags</h3><div id="dashboard-tags" class="flex flex-wrap gap-3"></div></div>
+            </div>
+        </section>
+
+        <!-- FOLDER DETAIL -->
+        <section id="view-folder-detail" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar bg-[#FAFBFF]">
+            <div class="flex items-center space-x-4 mb-10">
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center"><i data-lucide="folder-open"></i></div>
+                <div>
+                    <h1 id="folder-detail-title" class="text-4xl font-black text-indigo-900 tracking-tighter leading-none">Carpeta</h1>
+                    <p id="folder-detail-count" class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">0 Documentos</p>
+                </div>
+            </div>
+            <div id="folder-notes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- GRAPH -->
+        <section id="view-graph" class="view-section relative">
+            <div class="absolute top-10 left-10 z-10 bg-white/80 backdrop-blur-2xl p-8 rounded-[32px] border border-slate-200 shadow-2xl pointer-events-none max-w-xs">
+                <h2 class="font-black text-3xl text-indigo-900 tracking-tighter leading-none">Grafo Nexus</h2>
+                <p class="text-[11px] text-slate-500 font-bold uppercase mt-3 leading-relaxed">Arrastra nodos para reorganizar visualmente tu mente.</p>
+                <div class="mt-6 flex flex-wrap gap-2">
+                    <span class="flex items-center gap-1.5 text-[10px] font-black uppercase text-indigo-500"><div class="w-2 h-2 rounded-full bg-indigo-500"></div> Nota</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-500"><div class="w-2 h-2 rounded-full bg-emerald-500"></div> Tarea</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-500"><div class="w-2 h-2 rounded-full bg-amber-500"></div> Hashtag</span>
+                </div>
+            </div>
+            <div id="nexus-container" class="h-full"><canvas id="nexus-canvas"></canvas></div>
+        </section>
+
+        <!-- NOTES VIEW -->
+        <section id="view-notes" class="view-section !p-0">
+            <header class="min-h-24 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between px-6 md:px-12 bg-white gap-4 py-6 md:py-0 shadow-sm">
+                <div class="flex-1 flex items-center gap-3">
+                    <span id="note-folder-badge" class="px-2 py-1 bg-indigo-50 text-[9px] font-black text-indigo-600 rounded uppercase"></span>
+                    <input type="text" id="note-title" oninput="autoSave()" placeholder="Título..." class="text-2xl md:text-3xl font-black bg-transparent border-none outline-none w-full text-slate-900 tracking-tighter">
+                </div>
+                <div class="flex items-center justify-between md:justify-end gap-4">
+                    <div class="flex bg-slate-100 p-1 rounded-xl">
+                        <button onclick="setTab('live')" id="btn-live" class="px-4 md:px-6 py-2 rounded-lg text-[9px] font-black uppercase transition-all border-none cursor-pointer">Live</button>
+                        <button onclick="setTab('edit')" id="btn-edit" class="px-4 md:px-6 py-2 rounded-lg text-[9px] font-black uppercase transition-all border-none cursor-pointer">Fuente</button>
+                        <button onclick="setTab('preview')" id="btn-preview" class="px-4 md:px-6 py-2 rounded-lg text-[9px] font-black uppercase transition-all border-none cursor-pointer text-slate-400">View</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="downloadMarkdown()" class="p-3 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 transition-all border-none cursor-pointer"><i data-lucide="download" class="w-5 h-5"></i></button>
+                        <button onclick="moveToTrashCurrent()" class="p-3 hover:bg-red-50 rounded-xl text-red-300 hover:text-red-500 transition-all border-none cursor-pointer"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+            </header>
+            <div class="flex-1 flex overflow-hidden">
+                <div id="editor-container" class="flex-1 p-6 md:p-16 lg:px-48 overflow-y-auto no-scrollbar bg-[#FDFDFF]">
+                    <textarea id="main-editor" oninput="autoSave()" class="w-full h-full bg-transparent border-none outline-none resize-none font-mono text-lg md:text-xl leading-relaxed text-slate-600" placeholder="Redactar nota..."></textarea>
+                </div>
+                <div id="preview-container" class="hidden flex-1 p-6 md:p-16 lg:px-48 overflow-y-auto no-scrollbar border-l border-slate-50 bg-white">
+                    <div id="render-target" class="prose prose-indigo max-w-none"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TASKS -->
+        <section id="view-tasks" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar bg-[#FAFBFF]">
+            <h1 class="text-4xl font-black mb-10 text-indigo-900 tracking-tighter">Agenda Estratégica</h1>
+            <div class="bg-white p-8 md:p-10 rounded-[40px] border border-slate-100 mb-10 space-y-4 shadow-sm max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="task-text" placeholder="¿Qué vamos a lograr? #tag" class="p-5 rounded-2xl border border-slate-200 outline-none text-sm">
+                    <select id="task-owner" class="p-5 rounded-2xl border border-slate-200 outline-none bg-slate-50 font-bold text-sm"></select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="date" id="task-date" class="p-5 rounded-2xl border border-slate-200 outline-none text-sm">
+                    <input type="time" id="task-time" class="p-5 rounded-2xl border border-slate-200 outline-none text-sm">
+                    <button onclick="addTaskNexus()" class="bg-indigo-600 text-white rounded-2xl font-black text-xs hover:bg-indigo-700 h-14 border-none cursor-pointer">AÑADIR TAREA</button>
+                </div>
+            </div>
+            <div id="tasks-list" class="max-w-4xl mx-auto space-y-4 pb-20"></div>
+        </section>
+
+        <!-- TEAMS -->
+        <section id="view-teams" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar">
+            <h1 class="text-4xl font-black text-indigo-900 mb-10">Equipos Activos</h1>
+            <div id="teams-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+        </section>
+
+        <!-- CONTACTS -->
+        <section id="view-contacts" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center mb-10"><h1 class="text-4xl font-black text-indigo-900">Directorio</h1><button onclick="toggleContactForm()" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-lg border-none cursor-pointer">+ Nuevo</button></div>
+            <div id="contact-form-overlay" class="hidden bg-slate-50 p-10 rounded-[32px] border border-slate-200 mb-10 space-y-6">
+                <input type="text" id="contact-name" placeholder="Nombre" class="p-4 rounded-2xl border border-slate-200 outline-none">
+                <input type="email" id="contact-email" placeholder="Email" class="p-4 rounded-2xl border border-slate-200 outline-none">
+                <div class="flex justify-end space-x-4"><button onclick="toggleContactForm()" class="px-6 py-3 font-bold text-slate-400 border-none bg-transparent">Cancelar</button><button onclick="addContactNexus()" class="bg-slate-900 text-white px-10 py-3 rounded-2xl font-black border-none">Guardar</button></div>
+            </div>
+            <div id="contacts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+        </section>
+
+        <!-- TRASH -->
+        <section id="view-trash" class="view-section p-6 md:p-12 overflow-y-auto no-scrollbar bg-[#FFF9F9]">
+            <div class="flex items-center justify-between mb-10"><h1 class="text-4xl font-black text-red-900">Papelera</h1><button onclick="emptyTrashPermanently()" class="text-xs font-black text-red-400 hover:text-red-600 underline border-none bg-transparent cursor-pointer">Vaciar Todo</button></div>
+            <div id="trash-list" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- CALENDAR -->
+        <section id="view-calendar" class="view-section p-12 overflow-y-auto no-scrollbar"></section>
+
+    </main>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-5 rounded-3xl shadow-2xl translate-y-40 transition-transform z-[100] font-black text-xs flex items-center space-x-3">
+        <div class="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+        <span id="toast-text">Nexus Online</span>
+    </div>
+
+    <script>
+        // --- GLOBALS & STATE ---
+        let graphState = { z: 1, px: 0, py: 0, d: false, lastMouse: {x:0, y:0}, draggedNode: null };
+        let currentTab = 'live';
+        let draggedBlockIndex = null;
+        let calendarDate = new Date();
+        
+        const welcomeMD = `# 🧪 Zenith Nexus v9.9.1: Ultimate Masterclass
+
+Plataforma de pensamiento de alto rendimiento con gestión total de activos.
+
+## 📊 1. Diagramas Mermaid (4 Tipos)
+\`\`\`mermaid
+graph TD
+    A[Inicio] --> B{¿Es Técnico?}
+    B -- Sí --> C[Cerebro Externo]
+    B -- No --> D[Dashboard]
+    C --> E[Publicación]
+\`\`\`
+
+\`\`\`mermaid
+gantt
+    title Cronograma de Trabajo
+    section Analisis
+    Drafting :a1, 2026-02-01, 30d
+    Review :after a1, 10d
+\`\`\`
+
+\`\`\`mermaid
+mindmap
+  root((Zenith PKM))
+    Estructura
+      Carpetas
+      Papelera
+    Interactividad
+      JS Nodos
+      Mermaid
+\`\`\`
+
+\`\`\`mermaid
+sequenceDiagram
+    Usuario->>Editor: Escribe MD
+    Editor->>Nexus: Procesa Tags
+    Nexus-->>Usuario: Grafo Actualizado
+\`\`\`
+
+## ⚛️ 2. Ciencia de Datos (4 Niveles JS)
+
+### Nivel 1: Cálculos
+\`\`\`javascript
+const stock = 1500;
+const ventas = 450;
+return "Inventario: " + (stock - ventas) + " unidades.";
+\`\`\`
+
+### Nivel 2: Visualización SVG
+\`\`\`javascript
+const data = [60, 110, 85, 140, 70, 130];
+const bars = data.map((v, i) => '<rect x="' + (i * 60 + 20) + '" y="' + (150 - v) + '" width="45" height="' + v + '" fill="#4F46E5" rx="8"><animate attributeName="height" from="0" to="' + v + '" dur="1s" /></rect>').join('');
+return '<svg viewBox="0 0 400 180" class="w-full max-w-sm mx-auto">' + bars + '</svg>';
+\`\`\`
+
+### Nivel 3: Pandas-style Analysis
+\`\`\`javascript
+const tableData = [{cat:"A", v:500}, {cat:"B", v:1200}, {cat:"C", v:800}];
+return '<table class="w-full text-xs bg-slate-800 rounded-xl p-4 text-white"><tr><th>Cat</th><th>Valor</th></tr>' + tableData.map(d => '<tr><td>' + d.cat + '</td><td>' + d.v + '</td></tr>').join('') + '</table>';
+\`\`\`
+
+### Nivel 4: Animaciones
+\`\`\`javascript
+return '<div class="h-20 flex items-center justify-center gap-4 bg-indigo-50 rounded-2xl"><div class="w-4 h-4 bg-indigo-500 rounded-full animate-bounce"></div><div class="w-4 h-4 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]"></div><div class="w-4 h-4 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]"></div></div>';
+\`\`\`
+
+## 🛠️ 3. Markdown & HTML
+<div class="p-6 bg-indigo-600 text-white rounded-3xl font-black text-center shadow-xl">DISEÑO HTML INTEGRADO</div>
+
+| Soporte | Estado |
+| :--- | :--- |
+| **KaTeX** | ✅ OK |
+| **Mermaid** | ✅ OK |
+
+> "Organiza tu mente, organiza tu vida." #productividad #ciencia #nexus`;
+
+        let state = JSON.parse(localStorage.getItem('zenith_pro_v9.9')) || {
+            notes: [{ id: '1', title: '🚀 Guía Nexus Masterclass', content: welcomeMD, updatedAt: Date.now(), folder: 'General' }],
+            tasks: [],
+            contacts: [{ id: 'c1', name: 'Investigador', email: 'me@zenith.pro' }],
+            teams: ['Investigación', 'Estrategia'],
+            folders: ['General', 'Proyectos'],
+            collapsedFolders: [],
+            trash: [],
+            currentNoteId: '1',
+            activeFolder: 'General'
+        };
+
+        function save() { 
+            localStorage.setItem('zenith_pro_v9.9', JSON.stringify(state));
+            renderFileSystem();
+            renderDashboard();
+            updateOwnerSelect();
+        }
+
+        // --- SIDEBAR & NAV ---
+        function toggleSidebar(open) {
+            const s = document.getElementById('main-sidebar');
+            const o = document.getElementById('mobile-overlay');
+            if(open) { s.classList.remove('-translate-x-full'); o.classList.remove('hidden'); }
+            else { s.classList.add('-translate-x-full'); o.classList.add('hidden'); }
+        }
+
+        function switchView(view) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-tab'));
+            const target = document.getElementById(`view-${view}`);
+            if(target) target.classList.add('active');
+            const nav = document.getElementById(`nav-${view}`);
+            if(nav) nav.classList.add('active-tab');
+            
+            if(view === 'dashboard') renderDashboard();
+            if(view === 'tasks') renderTasks();
+            if(view === 'contacts') renderContacts();
+            if(view === 'teams') renderTeams();
+            if(view === 'trash') renderTrash();
+            if(view === 'graph') setTimeout(initNexusGraph, 100);
+            if (window.innerWidth < 768) toggleSidebar(false);
+            lucide.createIcons();
+        }
+
+        function setTab(tab) {
+            currentTab = tab;
+            const isRender = tab === 'preview' || tab === 'live';
+            document.getElementById('editor-container').classList.toggle('hidden', isRender);
+            document.getElementById('preview-container').classList.toggle('hidden', !isRender);
+            ['edit', 'live', 'preview'].forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if(btn) btn.classList.toggle('bg-white', t === tab);
+                if(btn) btn.classList.toggle('shadow-sm', t === tab);
+            });
+            if(isRender) renderMarkdown(tab === 'live');
+        }
+
+        // --- FILE SYSTEM (TREE & GALLERY) ---
+        function renderFileSystem() {
+            const container = document.getElementById('file-system-tree');
+            if(!container) return;
+            container.innerHTML = (state.folders || []).map(folder => {
+                const isCollapsed = (state.collapsedFolders || []).includes(folder);
+                const folderNotes = state.notes.filter(n => n.folder === folder);
+                return `
+                    <div class="mb-1">
+                        <div class="tree-folder ${state.activeFolder === folder ? 'selected' : ''}" onclick="viewFolder('${folder}')">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="${isCollapsed ? 'chevron-right' : 'chevron-down'}" class="w-3 h-3"></i>
+                                <i data-lucide="folder" class="w-4 h-4 text-indigo-400"></i>
+                                <span>${folder}</span>
+                            </div>
+                            <span class="text-[9px] font-black opacity-30">${folderNotes.length}</span>
+                        </div>
+                        <div class="${isCollapsed ? 'hidden' : 'block'}">
+                            ${folderNotes.map(n => `<div onclick="loadNote('${n.id}')" class="tree-note ${state.currentNoteId === n.id ? 'active' : ''}"><i data-lucide="file-text" class="w-3.5 h-3.5 opacity-40"></i><span class="truncate">${n.title || 'Sin título'}</span></div>`).join('')}
+                        </div>
+                    </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function viewFolder(name) {
+            state.activeFolder = name;
+            switchView('folder-detail');
+            document.getElementById('folder-detail-title').textContent = name;
+            const folderNotes = state.notes.filter(n => n.folder === name);
+            document.getElementById('folder-detail-count').textContent = folderNotes.length + " Documentos";
+            const grid = document.getElementById('folder-notes-grid');
+            grid.innerHTML = folderNotes.map(n => {
+                const words = n.content ? n.content.split(/\s+/).length : 0;
+                const summary = n.content ? n.content.substring(0, 100).replace(/[#*`]/g, '') + '...' : "";
+                return `
+                    <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group" onclick="loadNote('${n.id}')">
+                        <div class="w-10 h-10 bg-slate-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-6"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+                        <h3 class="font-black text-xl text-slate-800 mb-3 truncate">${n.title || 'Borrador'}</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed mb-6">${summary}</p>
+                        <div class="flex items-center gap-4 pt-4 border-t border-slate-50 text-[10px] font-bold text-slate-400 uppercase">
+                            <span><i data-lucide="type" class="w-3 h-3 inline"></i> ${n.content.length} Chars</span>
+                            <span><i data-lucide="align-left" class="w-3 h-3 inline"></i> ${words} Words</span>
+                        </div>
+                    </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleFolderForm() { document.getElementById('folder-inline-form').classList.toggle('hidden'); }
+        function confirmFolderCreation() {
+            const input = document.getElementById('new-folder-name');
+            const name = input.value.trim();
+            if(name && !state.folders.includes(name)) { state.folders.push(name); input.value = ''; toggleFolderForm(); save(); }
+        }
+
+        // --- DASHBOARD & MODULES ---
+        function renderDashboard() {
+            const statsMap = { 'stat-notes': state.notes.length, 'stat-tasks-done': state.tasks.filter(t=>t.status==='done').length, 'stat-folders': state.folders.length, 'stat-trash': state.trash.length };
+            Object.entries(statsMap).forEach(([id, val]) => { const el = document.getElementById(id); if(el) el.textContent = val; });
+            const recent = document.getElementById('dashboard-recent');
+            if(recent) recent.innerHTML = state.notes.slice(0, 3).map(n => `<div class="p-6 bg-slate-50 rounded-[24px] flex items-center justify-between cursor-pointer group hover:bg-white transition-all shadow-sm" onclick="loadNote('${n.id}')"><span class="font-bold text-sm text-slate-800 font-bold">${n.title || 'Borrador'}</span><i data-lucide="arrow-right" class="w-4 h-4 opacity-0 group-hover:opacity-100 text-indigo-500"></i></div>`).join('');
+            const tagsDiv = document.getElementById('dashboard-tags');
+            if(tagsDiv) {
+                const allTags = [...new Set([...state.notes.flatMap(n => (n.content.match(/#(\w+)/g) || []).map(x => x.slice(1)))])];
+                tagsDiv.innerHTML = allTags.map(tag => `<span class="hashtag-pill px-5 py-2 uppercase text-[9px]">#${tag}</span>`).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('tasks-list'); if(!list) return;
+            list.innerHTML = state.tasks.map(t => `<div class="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between group shadow-sm"><div class="flex-1"><div class="flex items-center space-x-4"><span onclick="cycleStatus(${t.id})" class="status-badge status-${t.status}">${t.status}</span><h4 class="font-black text-slate-800 text-lg">${t.text.replace(/#\w+/g, '')}</h4></div><div class="flex items-center space-x-8 mt-4 text-[10px] text-slate-400 font-black uppercase tracking-widest"><span>${t.owner || 'Yo'}</span><span>${t.date || '-'}</span></div></div><button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 p-3 text-red-300 border-none bg-transparent cursor-pointer"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function updateOwnerSelect() { const os = document.getElementById('task-owner'); if(os) os.innerHTML = state.contacts.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); }
+
+        function renderTeams() {
+            const grid = document.getElementById('teams-grid'); if(!grid) return;
+            grid.innerHTML = state.teams.map(t => `<div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm"><h3 class="font-black text-xl text-slate-800">${t}</h3><p class="text-[10px] text-slate-400 uppercase mt-2">Acceso: Lector/Editor</p></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderContacts() {
+            const grid = document.getElementById('contacts-grid'); if(!grid) return;
+            grid.innerHTML = state.contacts.map(c => `<div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center group"><div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center font-black text-xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">${c.name[0]}</div><h3 class="font-black text-lg text-slate-800 text-center">${c.name}</h3></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderTrash() {
+            const list = document.getElementById('trash-list'); if(!list) return;
+            if(state.trash.length === 0) { list.innerHTML = `<div class="col-span-full text-center text-slate-300 py-10 uppercase font-black opacity-20">Vacio</div>`; return; }
+            list.innerHTML = state.trash.map(n => `<div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm"><h3 class="font-black text-xl mb-2">${n.title || 'Borrador'}</h3><p class="text-[10px] text-slate-400 uppercase mb-8 italic">Origin: ${n.folder}</p><div class="flex gap-2"><button onclick="restoreNote('${n.id}')" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black border-none cursor-pointer">RESTAURAR</button><button onclick="deletePermanently('${n.id}')" class="p-3 bg-red-50 text-red-500 rounded-2xl border-none cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`).join('');
+            lucide.createIcons();
+        }
+
+        // --- GRAPH ENGINE ---
+        function initNexusGraph() {
+            const container = document.getElementById('nexus-container');
+            const canvas = document.getElementById('nexus-canvas');
+            const ctx = canvas.getContext('2d');
+            if(!canvas || !container) return;
+            canvas.width = container.clientWidth; canvas.height = container.clientHeight;
+            
+            let nodes = [], links = [];
+            state.notes.forEach(n => {
+                const tgs = (n.content.match(/#(\w+)/g) || []).map(x => x.slice(1).toLowerCase());
+                nodes.push({ id: `n-${n.id}`, label: n.title || 'Nota', type: 'note', tags: tgs, x: Math.random()*canvas.width, y: Math.random()*canvas.height });
+            });
+            state.tasks.forEach(t => {
+                const tgs = (t.text.match(/#(\w+)/g) || []).map(x => x.slice(1).toLowerCase());
+                nodes.push({ id: `t-${t.id}`, label: t.text.substring(0,10), type: 'task', tags: tgs, x: Math.random()*canvas.width, y: Math.random()*canvas.height });
+            });
+            const ut = [...new Set(nodes.flatMap(n => n.tags || []))];
+            ut.forEach(tag => nodes.push({ id: `tag-${tag}`, label: `#${tag}`, type: 'tag', x: Math.random()*canvas.width, y: Math.random()*canvas.height }));
+            nodes.forEach(n => { if(n.tags) n.tags.forEach(tagStr => { const tagNode = nodes.find(x => x.id === `tag-${tagStr}`); if(tagNode && tagNode !== n) links.push({ s: n, t: tagNode }); }); });
+
+            container.onmousedown = (e) => { 
+                const rect = canvas.getBoundingClientRect();
+                const mx = (e.clientX - rect.left - canvas.width/2 - graphState.px) / graphState.z + canvas.width/2;
+                const my = (e.clientY - rect.top - canvas.height/2 - graphState.py) / graphState.z + canvas.height/2;
+                graphState.draggedNode = nodes.find(n => Math.sqrt((n.x - mx)**2 + (n.y - my)**2) < 25);
+                graphState.d = true; graphState.lastMouse = { x: e.clientX, y: e.clientY }; 
+            };
+            window.onmousemove = (e) => { 
+                if(!graphState.d) return; 
+                if(graphState.draggedNode) { graphState.draggedNode.x += (e.clientX - graphState.lastMouse.x) / graphState.z; graphState.draggedNode.y += (e.clientY - graphState.lastMouse.y) / graphState.z; }
+                else { graphState.px += e.clientX - graphState.lastMouse.x; graphState.py += e.clientY - graphState.lastMouse.y; }
+                graphState.lastMouse = { x: e.clientX, y: e.clientY }; draw(); 
+            };
+            window.onmouseup = () => { graphState.d = false; graphState.draggedNode = null; };
+            container.onwheel = (e) => { e.preventDefault(); graphState.z = Math.max(0.1, Math.min(3, graphState.z - e.deltaY * 0.001)); draw(); };
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save();
+                ctx.translate(canvas.width/2 + graphState.px, canvas.height/2 + graphState.py);
+                ctx.scale(graphState.z, graphState.z); ctx.translate(-canvas.width/2, -canvas.height/2);
+                ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1.5;
+                links.forEach(l => { ctx.beginPath(); ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y); ctx.stroke(); });
+                nodes.forEach(n => {
+                    ctx.beginPath(); ctx.arc(n.x, n.y, 16, 0, Math.PI*2);
+                    ctx.fillStyle = n.type==='task'?'#10B981':n.type==='tag'?'#F59E0B':'#6366F1';
+                    ctx.fill(); ctx.strokeStyle = '#FFF'; ctx.lineWidth = 4; ctx.stroke();
+                    ctx.fillStyle = '#1E293B'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center'; ctx.fillText(n.label, n.x, n.y + 35);
+                });
+                ctx.restore();
+            }
+            draw();
+        }
+
+        // --- RENDER ENGINE ---
+        function getMarkdownBlocks(md) { return !md || !md.trim() ? [] : marked.lexer(md).map(t => t.raw); }
+        async function renderMarkdown(isLive = false) {
+            const target = document.getElementById('render-target');
+            const note = state.notes.find(n => n.id === state.currentNoteId);
+            const md = note ? note.content : '';
+            const badge = document.getElementById('note-folder-badge');
+            if(badge) badge.textContent = note ? note.folder : 'S/F';
+            if (!md.trim()) { target.innerHTML = `<div class="h-96 flex justify-center items-center"><button onclick="addLiveBlock(0, 'above')" class="bg-indigo-600 text-white px-10 py-4 rounded-3xl font-black text-xs border-none cursor-pointer">CREAR BLOQUE</button></div>`; return; }
+            if(isLive) {
+                const blocks = getMarkdownBlocks(md); target.innerHTML = '';
+                blocks.forEach((b, i) => {
+                    const wrapper = document.createElement('div'); wrapper.className = 'live-block-wrapper'; wrapper.draggable = true;
+                    wrapper.innerHTML = `
+                        <div class="block-sidebar"><div class="drag-handle"><i data-lucide="grip-vertical" class="w-5 h-5"></i></div></div>
+                        <button onclick="addLiveBlock(${i}, 'above')" class="add-block-btn add-above"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                        <div class="live-block">${marked.parse(b)}</div>
+                        <button onclick="addLiveBlock(${i}, 'below')" class="add-block-btn add-below"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+                    wrapper.ondragstart = (e) => { e.dataTransfer.setData('text/plain', i); wrapper.classList.add('dragging'); };
+                    wrapper.ondragend = () => wrapper.classList.remove('dragging');
+                    wrapper.ondragover = (e) => e.preventDefault();
+                    wrapper.ondrop = (e) => { e.preventDefault(); reorderBlocks(parseInt(e.dataTransfer.getData('text/plain')), i); };
+                    wrapper.querySelector('.live-block').onclick = (e) => {
+                        if (e.target.closest('.js-exec-btn') || e.target.closest('.js-output')) { e.stopPropagation(); return; }
+                        if(!wrapper.querySelector('textarea')) enterLiveEdit(wrapper.querySelector('.live-block'), b, i);
+                    };
+                    target.appendChild(wrapper);
+                });
+            } else target.innerHTML = marked.parse(md);
+            renderMathInElement(target, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false });
+            const mBlocks = target.querySelectorAll('.language-mermaid');
+            for (let b of mBlocks) {
+                const div = document.createElement('div'); div.className = 'mermaid flex justify-center py-12 bg-slate-50 rounded-[40px] my-8 border border-slate-100 overflow-x-auto';
+                div.textContent = b.textContent; b.parentElement.replaceWith(div);
+            }
+            if (mBlocks.length > 0) await mermaid.run();
+            const jsBlocks = target.querySelectorAll('.language-javascript');
+            jsBlocks.forEach((block) => {
+                const code = block.textContent; const container = block.parentElement;
+                if (!container.querySelector('.js-exec-btn')) {
+                    const execBtn = document.createElement('button'); execBtn.className = 'js-exec-btn'; execBtn.innerHTML = '<i data-lucide="play" class="w-3 h-3"></i> EJECUTAR';
+                    execBtn.onclick = (e) => { e.stopPropagation(); runJSBlock(code, container); }; container.prepend(execBtn);
+                }
+            });
+            lucide.createIcons();
+        }
+
+        function runJSBlock(code, container) {
+            let outputDiv = container.querySelector('.js-output');
+            if (!outputDiv) { outputDiv = document.createElement('div'); outputDiv.className = 'js-output'; container.appendChild(outputDiv); }
+            try {
+                const log = []; const consoleProxy = { log: (...args) => log.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')) };
+                const result = new Function('console', code)(consoleProxy);
+                outputDiv.innerHTML = `<div class="text-[10px] text-slate-500 mb-2 font-black uppercase">Consola:</div>> ${log.join('<br>> ')} ${result ? '<div class="mt-4 pt-2 border-t border-white/10 text-emerald-400">Return: ' + result + '</div>' : ''}`;
+            } catch(e) { outputDiv.innerHTML = `<span class="text-red-500 font-bold">Error: ${e.message}</span>`; }
+        }
+
+        function reorderBlocks(from, to) {
+            const blocks = getMarkdownBlocks(document.getElementById('main-editor').value);
+            const [moved] = blocks.splice(from, 1); blocks.splice(to, 0, moved);
+            document.getElementById('main-editor').value = blocks.join('\n\n'); autoSave(); renderMarkdown(true);
+        }
+
+        function addLiveBlock(index, position) {
+            let blocks = getMarkdownBlocks(document.getElementById('main-editor').value);
+            const newBlock = "Nuevo bloque informativo... #editame";
+            if (blocks.length === 0) blocks = [newBlock];
+            else { if(position === 'above') blocks.splice(index, 0, newBlock); else blocks.splice(index + 1, 0, newBlock); }
+            document.getElementById('main-editor').value = blocks.join('\n\n'); autoSave(); renderMarkdown(true);
+        }
+
+        function enterLiveEdit(div, raw, idx) {
+            const area = document.createElement('textarea'); area.className = 'live-editor-textarea'; area.value = raw; div.innerHTML = ''; div.appendChild(area); area.focus();
+            area.onblur = () => {
+                const blocks = getMarkdownBlocks(document.getElementById('main-editor').value);
+                blocks[idx] = area.value; document.getElementById('main-editor').value = blocks.join('\n\n'); autoSave(); renderMarkdown(true);
+            };
+        }
+
+        // --- UTILS ---
+        function loadNote(id) { state.currentNoteId = id; const n = state.notes.find(x => x.id === id); if(n) { document.getElementById('note-title').value = n.title; document.getElementById('main-editor').value = n.content; setTab('live'); switchView('notes'); } }
+        function createNewNote() { const id = Date.now().toString(); state.notes.unshift({ id, title: '', content: '', updatedAt: Date.now(), folder: state.activeFolder }); save(); loadNote(id); }
+        function autoSave() { const n = state.notes.find(x => x.id === state.currentNoteId); if(n) { n.title = document.getElementById('note-title').value; n.content = document.getElementById('main-editor').value; n.updatedAt = Date.now(); save(); } }
+        function showToast(m) { const t = document.getElementById('toast'); const te = document.getElementById('toast-text'); if(te) te.textContent = m; if(t) { t.classList.remove('translate-y-40'); setTimeout(() => { if(t) t.classList.add('translate-y-40') }, 3000); } }
+        function downloadMarkdown() { const n = state.notes.find(x => x.id === state.currentNoteId); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([n.content], {type:'text/markdown'})); a.download = `${n.title || 'paper'}.md`; a.click(); }
+        function moveToTrashCurrent() { const idx = state.notes.findIndex(n => n.id === state.currentNoteId); if(idx === -1) return; const [note] = state.notes.splice(idx, 1); state.trash.push(note); save(); if(state.notes.length > 0) loadNote(state.notes[0].id); else createNewNote(); showToast("Nota en papelera"); }
+        function restoreNote(id) { const idx = state.trash.findIndex(n => n.id === id); if(idx === -1) return; const [note] = state.trash.splice(idx, 1); state.notes.unshift(note); save(); renderTrash(); }
+        function deletePermanently(id) { if(confirm("¿Eliminar para siempre?")) { state.trash = state.trash.filter(n => n.id !== id); save(); renderTrash(); } }
+        function emptyTrashPermanently() { if(confirm("¿Vaciar todo?")) { state.trash = []; save(); renderTrash(); } }
+        function addTaskNexus() {
+            const text = document.getElementById('task-text').value.trim(); if(!text) return;
+            state.tasks.unshift({ id: Date.now(), text, owner: document.getElementById('task-owner').value, date: document.getElementById('task-date').value, time: document.getElementById('task-time').value, status: 'todo' });
+            save(); renderTasks(); document.getElementById('task-text').value = '';
+        }
+
+        window.onload = () => { mermaid.initialize({ startOnLoad: false, theme: 'neutral' }); switchView('dashboard'); save(); };
+    </script>
+</body>
+</html>
